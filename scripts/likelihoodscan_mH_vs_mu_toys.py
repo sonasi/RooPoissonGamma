@@ -70,7 +70,7 @@ likelihoods_iter = []
 itoys = 25
 
 for iter in range(itoys):
-    print "Iteration: {}/{}".format( iter, itoys )
+    print "Iteration: {0}/{1}".format( iter, itoys )
 
     likelihoods = []
 
@@ -98,7 +98,7 @@ for iter in range(itoys):
 
         # Get the data    
         findata.cd()
-        histname = "fakedata_{}_{}_{}".format(channel, mass, iter)
+        histname = "fakedata_{0}_{1}_{2}".format(channel, mass, iter)
         print histname
         data = gDirectory.Get(histname)
         fin.cd()
@@ -107,7 +107,7 @@ for iter in range(itoys):
         
         
 
-        print "mass: {}, plot: {}, channel: {}".format(mass, mva, channel)
+        print "mass: {0}, plot: {1}, channel: {2}".format(mass, mva, channel)
 
         sig_ggH = gDirectory.Get( "ggH_" + str(mass) + "_" + channel + "_" + era + "_" + mva   )    
         sig_qqH = gDirectory.Get( "qqH_" + str(mass) + "_" + channel + "_" + era + "_" + mva   )
@@ -137,7 +137,7 @@ for iter in range(itoys):
         scanmu1d = [0]*len(masses)
 
         for i, mass in enumerate(masses):
-                print "Channel: {}, Mass: {}".format(channel, mass)
+                print "Channel: {0}, Mass: {1}".format(channel, mass)
     
                 # Get the signal
                 sig_ggH = gDirectory.Get(    "ggH_" + str(mass) + "_" + channel + "_" + era + "_" + mva   )    
@@ -182,7 +182,7 @@ for iter in range(itoys):
         print massint
         print scanmu1d    
         gr = TGraph(len(masses), array("d", massint) , array("d",scanmu1d) )
-        gr.SetName("nll_mu_mH_{}".format(channel))
+        gr.SetName("nll_mu_mH_{0}".format(channel))
         c1.cd(1)
         likelihoods[len(likelihoods)-1].Draw("colz")
         c1.cd(2)
