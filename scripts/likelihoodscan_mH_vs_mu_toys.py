@@ -43,7 +43,7 @@ channel = "2e2mu"
 era = "8TeV"
 mva = "2d"
 
-masses = ["118", "120", "122", "123", "124", "125", "126", "127", "128", "130", "135"]
+masses = ["118", "120", "122", "123", "124", "126", "127", "128", "130", "135"]
 massint = map(int, masses)
 stepsize = 0.2
 xmin = 0.1
@@ -56,12 +56,10 @@ likelihoods1d = []
 # Prepare input histograms
 findata = TFile( "fake_data.root")
 fin = TFile( "/home/jbochenek/work/HZZ4l_2013/scripts/hzz_templates.root")
-fout = TFile("../output/lh_mh_output_toys.root", "recreate")
+fout = TFile("../output/lh_mh_output_toys_2.root", "recreate")
 
 factor = 2.
 
-c1 = TCanvas()
-c1.Divide(2)
 
 nsyst = 2
 
@@ -98,7 +96,7 @@ for iter in range(itoys):
 
         # Get the data    
         findata.cd()
-        histname = "fakedata_{0}_{1}_{2}".format(channel, mass, iter)
+        histname = "fakedata_{0}_{1}_1".format(channel, mass, iter)
         print histname
         data = gDirectory.Get(histname)
         fin.cd()
@@ -122,14 +120,34 @@ for iter in range(itoys):
         hbkg_ggzz =  RooDataHist("bkg_ggzz","bkg_ggzz",  RooArgList(m4l,D),   bkg_ggzz)
         rbkg_ggzz =  RooHistPdf("rbkg_ggzz", "rbkg_ggzz",   RooArgSet(m4l,D), hbkg_ggzz)
 
-        rdata  =  RooDataHist("data","data",    RooArgList(m4l,D), data)
 
         hbkg_zx =  RooDataHist("bkg_zx","bkg_zx",  RooArgList(m4l,D),   bkg_zx)
         rbkg_zx =  RooHistPdf("rbkg_zx", "rbkg_zx",   RooArgSet(m4l,D), hbkg_zx)
 
 
+        rdata  =  RooDataHist("data","data",    RooArgList(m4l,D), data)
+
         null_roohistpg = RooHistPoissonGamma("null_pghistpdf","null_pghistpdf",RooArgSet(m4l, D), rdata, RooArgList(rbkg_qqzz, rbkg_ggzz, rbkg_zx), RooArgList(mu3       , mu4    , mu5  ), 0)
         nullzval = null_roohistpg.getVal()
+
+
+        # Get the signal
+        sig_ggH = gDirectory.Get(    "ggH_" + str(mass) + "_" + channel + "_" + era + "_" + mva   )    
+        sig_qqH = gDirectory.Get(    "qqH_" + str(mass) + "_" + channel + "_" + era + "_" + mva   )
+        hsig_qqH = RooDataHist("hsig_qqH","hsig_qqH",RooArgList(m4l,D),sig_qqH)
+        rsig_qqH = RooHistPdf( "rsig_qqH","rsig_qqH",RooArgSet(m4l,D) ,hsig_qqH)
+
+        hsig_ggH = RooDataHist("hsig_ggH","hsig_ggH",RooArgList(m4l,D),sig_ggH)
+        rsig_ggH = RooHistPdf( "rsig_ggH","rsig_ggH",RooArgSet(m4l,D) ,hsig_ggH)
+
+        samples = RooArgList(rsig_qqH, rsig_ggH,  rbkg_qqzz, rbkg_ggzz, rbkg_zx)
+        scales  = RooArgList(mu1,      mu2      , mu3       , mu4    , mu5  )
+
+        roohistpg = RooHistPoissonGamma("pghistpdf","pghistpdf",RooArgSet(m4l, D), rdata, samples, scales, 0)
+
+        zval = roohistpg.genHist(iter)
+        rdata  =  roohistpg.dataHist()
+
 
 
     #    nulllh = RooHistPoissonGamma("nullpghistpdf","nullpghistpdf",RooArgSet(m4l, D), rdata, RooArgList(rbkg_qqzz, rbkg_ggzz), RooArgList(mu1), 0)
@@ -183,11 +201,6 @@ for iter in range(itoys):
         print scanmu1d    
         gr = TGraph(len(masses), array("d", massint) , array("d",scanmu1d) )
         gr.SetName("nll_mu_mH_{0}".format(channel))
-        c1.cd(1)
-        likelihoods[len(likelihoods)-1].Draw("colz")
-        c1.cd(2)
-        gr.Draw("AC*")
-        c1.Update()
         fout.cd()
         gr.Write()
         likelihoods1d.append(gr)
@@ -202,6 +215,9 @@ for iter in range(itoys):
 dt = plot_util.ave_ln_loglikelihood(likelihoods_iter)
 #reset to zero 
 dt = plot_util.setzero_likelihood(dt)
+
+c1 = TCanvas()
+c1.Divide(2)
 
 c1.cd(1)
 likelihoods_iter[0].Draw("colz")
